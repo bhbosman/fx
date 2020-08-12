@@ -462,6 +462,9 @@ func New(opts ...Option) *App {
 	})
 	app.provide(provide{Target: app.shutdowner, Stack: frames})
 	app.provide(provide{Target: app.dotGraph, Stack: frames})
+	app.provide(provide{Target: app.provideLogger, Stack: frames})
+	app.provide(provide{Target: app.provideAppCloser, Stack: frames})
+
 
 	if app.err != nil {
 		app.logger.Printf("Error after options were applied: %v", app.err)

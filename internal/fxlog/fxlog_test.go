@@ -50,7 +50,7 @@ func TestNew(t *testing.T) {
 
 func TestPrint(t *testing.T) {
 	sink := new(Spy)
-	logger := &Logger{sink}
+	logger := &Logger{Printer: sink}
 
 	t.Run("printf", func(t *testing.T) {
 		sink.Reset()
@@ -152,14 +152,14 @@ func TestPrint(t *testing.T) {
 
 func TestPanic(t *testing.T) {
 	sink := new(Spy)
-	logger := &Logger{sink}
+	logger := &Logger{Printer: sink}
 	assert.Panics(t, func() { logger.Panic(errors.New("foo")) })
 	assert.Equal(t, "[Fx] foo\n", sink.String())
 }
 
 func TestFatal(t *testing.T) {
 	sink := new(Spy)
-	logger := &Logger{sink}
+	logger := &Logger{Printer: sink}
 
 	undo := stubExit()
 	defer undo(t)

@@ -38,17 +38,18 @@ type Printer interface {
 
 // New returns a new Logger backed by the standard library's log package.
 func New() *Logger {
-	return &Logger{log.New(os.Stderr, "", log.LstdFlags)}
+	return &Logger{Printer: log.New(os.Stderr, "", log.LstdFlags)}
 }
 
 // A Logger writes output to standard error.
 type Logger struct {
 	Printer
+	Name string
 }
 
 // Printf logs a formatted Fx line.
 func (l *Logger) Printf(format string, v ...interface{}) {
-	l.Printer.Printf(prepend(format), v...)
+	l.Printer.Printf(prepend(l.Name, format), v...)
 }
 
 // PrintProvide logs a type provided into the dig.Container.
@@ -73,16 +74,16 @@ func (l *Logger) PrintSignal(signal os.Signal) {
 
 // Panic logs an Fx line then panics.
 func (l *Logger) Panic(err error) {
-	l.Printer.Printf(prepend(err.Error()))
+	l.Printer.Printf(prepend(l.Name, err.Error()))
 	panic(err)
 }
 
 // Fatalf logs an Fx line then fatals.
 func (l *Logger) Fatalf(format string, v ...interface{}) {
-	l.Printer.Printf(prepend(format), v...)
+	l.Printer.Printf(prepend(l.Name, format), v...)
 	_exit()
 }
 
-func prepend(str string) string {
-	return fmt.Sprintf("[Fx] %s", str)
+func prepend(name, str string) string {
+	return fmt.Sprintf("[%s] %s", name, str)
 }
