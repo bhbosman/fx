@@ -38,7 +38,7 @@ type Printer interface {
 
 // New returns a new Logger backed by the standard library's log package.
 func New() *Logger {
-	return &Logger{Printer: log.New(os.Stderr, "", log.LstdFlags)}
+	return &Logger{Printer: log.New(os.Stderr, "", log.LstdFlags), Name: "Fx"}
 }
 
 // A Logger writes output to standard error.

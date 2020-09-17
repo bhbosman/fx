@@ -462,9 +462,8 @@ func New(opts ...Option) *App {
 	})
 	app.provide(provide{Target: app.shutdowner, Stack: frames})
 	app.provide(provide{Target: app.dotGraph, Stack: frames})
-	app.provide(provide{Target: app.provideLogger, Stack: frames})
-	app.provide(provide{Target: app.provideAppCloser, Stack: frames})
-
+	//app.provide(provide{Target: app.provideLogger, Stack: frames})
+	//app.provide(provide{Target: app.provideAppCloser, Stack: frames})
 
 	if app.err != nil {
 		app.logger.Printf("Error after options were applied: %v", app.err)
@@ -633,7 +632,7 @@ func (app *App) provide(p provide) {
 		return
 	}
 
-	if ann, ok := constructor.(Annotated); ok {
+	handleAnnotated := func(ann Annotated) {
 		var opts []dig.ProvideOption
 		switch {
 		case len(ann.Group) > 0 && len(ann.Name) > 0:
@@ -650,6 +649,19 @@ func (app *App) provide(p provide) {
 
 		if err := app.container.Provide(ann.Target, opts...); err != nil {
 			app.err = fmt.Errorf("fx.Provide(%v) from:\n%+vFailed: %v", ann, p.Stack, err)
+		}
+	}
+	// deal with Annotated and []Annotated
+	switch v := constructor.(type) {
+	case Annotated:
+		handleAnnotated(v)
+		return
+	case []Annotated:
+		for _, ann := range v {
+			handleAnnotated(ann)
+			if app.err != nil {
+				break
+			}
 		}
 		return
 	}

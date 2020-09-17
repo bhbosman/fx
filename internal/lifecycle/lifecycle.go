@@ -22,6 +22,7 @@ package lifecycle
 
 import (
 	"context"
+	"sync"
 
 	"go.uber.org/fx/internal/fxlog"
 	"go.uber.org/fx/internal/fxreflect"
@@ -38,6 +39,7 @@ type Hook struct {
 
 // Lifecycle coordinates application lifecycle hooks.
 type Lifecycle struct {
+	mutex      sync.Mutex
 	logger     *fxlog.Logger
 	hooks      []Hook
 	numStarted int
@@ -60,6 +62,8 @@ func (l *Lifecycle) Append(hook Hook) {
 // Start runs all OnStart hooks, returning immediately if it encounters an
 // error.
 func (l *Lifecycle) Start(ctx context.Context) error {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
 	for _, hook := range l.hooks {
 		if hook.OnStart != nil {
 			l.logger.Printf("START\t\t%s()", hook.caller)
@@ -75,10 +79,13 @@ func (l *Lifecycle) Start(ctx context.Context) error {
 // Stop runs any OnStop hooks whose OnStart counterpart succeeded. OnStop
 // hooks run in reverse order.
 func (l *Lifecycle) Stop(ctx context.Context) error {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
 	var errs []error
 	// Run backward from last successful OnStart.
 	for ; l.numStarted > 0; l.numStarted-- {
-		hook := l.hooks[l.numStarted-1]
+		ddd := l.numStarted - 1
+		hook := l.hooks[ddd]
 		if hook.OnStop == nil {
 			continue
 		}
